@@ -1,0 +1,22 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Launch Student Player Client",
+            "request": "launch",
+            "mainClass": "boardgame.Client",
+            "args": "student_player.StudentPlayer"
+        },
+        {
+            "type": "java",
+            "name": "Launch Random Player Client",
+            "request": "launch",
+            "mainClass": "boardgame.Client",
+            "args": "pentago_twist.RandomPentagoPlayer"
+        }
+    ]
+}
