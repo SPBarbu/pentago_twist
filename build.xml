@@ -10,7 +10,7 @@
     <!-- Compile ======================================================== -->
     <target name="compile">
         <mkdir dir="bin"/>
-        <javac srcdir="src" destdir="bin" debug="false" includeantruntime="false" source="${target.version}" target="${target.version}"/>
+        <javac srcdir="src" destdir="bin" debug="true" includeantruntime="false" source="${target.version}" target="${target.version}"/>
     </target>
 
     <target name="debug">
