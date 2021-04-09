@@ -14,7 +14,7 @@ public class StudentPlayer extends PentagoPlayer {
      * associate you with your agent. The constructor should do nothing else.
      */
     public StudentPlayer() {
-        super("260806224");
+        super("xxxxxxxxx");
     }
 
     /**
@@ -23,7 +23,10 @@ public class StudentPlayer extends PentagoPlayer {
      * make decisions.
      */
     public Move chooseMove(PentagoBoardState boardState) {
-        MyTools.test(boardState);
+        // You probably will make separate functions in MyTools.
+        // For example, maybe you'll need to load some pre-processed best opening
+        // strategies...
+        MyTools.getSomething();
 
         // Is random the best you can do?
         Move myMove = boardState.getRandomMove();
