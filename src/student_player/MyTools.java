@@ -2,6 +2,7 @@ package student_player;
 
 import boardgame.BoardState;
 import pentago_twist.*;
+import pentago_twist.PentagoBoardState.Piece;
 import boardgame.*;
 
 import java.util.ArrayList;
@@ -17,7 +18,12 @@ public class MyTools {
         }
     }
 
+    public static void test(PentagoBoardState a){
+        Custom_Board_State b = new Custom_Board_State(a);
+    }
+
     public static void main(String[] args) {
+
     }
 }
 
@@ -29,14 +35,6 @@ class Custom_Board_State extends BoardState {
     public static final int BLACK = 1;
     public static final int MAX_TURNS = 18;
     public static final int ILLEGAL = -1;
-
-    public enum Piece {
-        BLACK, WHITE, EMPTY;
-
-        public String toString() {
-            return this == EMPTY ? " " : String.valueOf(name().charAt(0)).toLowerCase();
-        }
-    }
 
     public static final UnaryOperator<PentagoCoord> getNextHorizontal = c -> new PentagoCoord(c.getX(), c.getY() + 1);
     public static final UnaryOperator<PentagoCoord> getNextVertical = c -> new PentagoCoord(c.getX() + 1, c.getY());
@@ -93,6 +91,29 @@ class Custom_Board_State extends BoardState {
         this.winner = pbs.winner;
         this.turnPlayer = pbs.turnPlayer;
         this.turnNumber = pbs.turnNumber;
+    }
+
+    // Convert from PBS to CBS
+    public Custom_Board_State(PentagoBoardState cbs) {
+        super();
+        this.board = new Piece[BOARD_SIZE][BOARD_SIZE];
+        Piece[][] t_cbs = cbs.getBoard();
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            for (int j = 0; j < BOARD_SIZE; j++) {
+                this.board[i][j] = t_cbs[i][j];
+            }
+        }
+        this.quadrants = new Piece[NUM_QUADS][QUAD_SIZE][QUAD_SIZE];
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            for (int j = 0; j < BOARD_SIZE; j++) {
+                this.quadrants[(i < 3 ? (j < 3 ? 0 : 1) : (j < 3 ? 2 : 3))][i % 3][j % 3] = this.board[i][j];
+            }
+        }
+
+        rand = new Random(2019);
+        this.winner = cbs.getWinner();
+        this.turnPlayer = cbs.getTurnPlayer();
+        this.turnNumber = cbs.getTurnNumber();
     }
 
     public Piece[][] getBoard() {
