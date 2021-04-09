@@ -1,48 +1,334 @@
 package student_player;
 
-import pentago_twist.PentagoBoardState.Piece;
-import java.util.concurrent.ThreadLocalRandom;
+import boardgame.BoardState;
+import pentago_twist.*;
+import boardgame.*;
+
+import java.util.ArrayList;
+import java.util.function.UnaryOperator;
+import java.util.Random;
 
 public class MyTools {
-    static long[][] zobrist_kernel = {
-            { 3426656090443505776L, 6498930185473388688L, 253487347233103987L, 8614390861676474625L,
-                    921416348712736123L, 8426036869812339724L, 4141270094557949890L, 2623972657093294210L,
-                    5493384634043826039L },
-            { 8544448772556060564L, 4021900698997532170L, 5563267841454116692L, 4681788819837768675L,
-                    6778026170414788438L, 4588469670436179290L, 8363641500665540096L, 1427310810430960288L,
-                    3852229342363795255L } };
+    private static Custom_Board_State playing_board;
 
-    public static double getSomething() {
-        return Math.random();
-    }
-
-    public static void generate_zobrist_random_numbers() {
-        for (int i = 0; i < zobrist_kernel[0].length * 2; i++) {
-            zobrist_kernel[i % zobrist_kernel.length][i % zobrist_kernel[0].length] = ThreadLocalRandom.current()
-                    .nextLong(Long.MAX_VALUE);
+    public static void init(PentagoBoardState boardState) {
+        if (playing_board == null) {
+            playing_board = new Custom_Board_State();
         }
     }
 
     public static void main(String[] args) {
-        Piece[][] quad = { { Piece.WHITE, Piece.BLACK, Piece.EMPTY }, { Piece.WHITE, Piece.BLACK, Piece.EMPTY },
-                { Piece.WHITE, Piece.BLACK, Piece.EMPTY } };
-        quadrant_hash(quad, 0);
+    }
+}
+
+class Custom_Board_State extends BoardState {
+    public static final int BOARD_SIZE = 6;
+    public static final int QUAD_SIZE = 3;
+    public static final int NUM_QUADS = 4;
+    public static final int WHITE = 0;
+    public static final int BLACK = 1;
+    public static final int MAX_TURNS = 18;
+    public static final int ILLEGAL = -1;
+    public enum Piece {
+        BLACK, WHITE, EMPTY;
+
+        public String toString() {
+            return this == EMPTY ? " " : String.valueOf(name().charAt(0)).toLowerCase();
+        }
+    }
+
+    public static final UnaryOperator<PentagoCoord> getNextHorizontal = c -> new PentagoCoord(c.getX(), c.getY()+1);
+    public static final UnaryOperator<PentagoCoord> getNextVertical = c -> new PentagoCoord(c.getX()+1, c.getY());
+    public static final UnaryOperator<PentagoCoord> getNextDiagRight = c -> new PentagoCoord(c.getX()+1, c.getY()+1);
+    public static final UnaryOperator<PentagoCoord> getNextDiagLeft = c -> new PentagoCoord(c.getX()+1, c.getY()-1);
+    public static int FIRST_PLAYER = 0;
+
+    public Piece[][] board;
+    public Piece[][][] quadrants;
+    public int turnPlayer;
+    public int turnNumber;
+    public int winner;
+    public Random rand;
+
+    public Custom_Board_State() {
+        super();
+        this.board = new Piece[BOARD_SIZE][BOARD_SIZE];
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            for (int j = 0; j < BOARD_SIZE; j++) {
+                this.board[i][j] = Piece.EMPTY;
+            }
+        }
+        this.quadrants = new Piece[NUM_QUADS][QUAD_SIZE][QUAD_SIZE];
+        for (int i = 0; i < NUM_QUADS; i++) {
+            for (int j = 0; j < QUAD_SIZE; j++) {
+                for (int k = 0; k < QUAD_SIZE; k++) {
+                    this.quadrants[i][j][k] = Piece.EMPTY;
+                }
+            }
+        }
+
+        rand = new Random(2019);
+        winner = Board.NOBODY;
+        turnPlayer = FIRST_PLAYER;
+        turnNumber = 0;
+    }
+
+    // For cloning
+    public Custom_Board_State(Custom_Board_State pbs) {
+        super();
+        this.board = new Piece[BOARD_SIZE][BOARD_SIZE];
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            System.arraycopy(pbs.board[i], 0, this.board[i], 0, BOARD_SIZE);
+        }
+        this.quadrants = new Piece[NUM_QUADS][QUAD_SIZE][QUAD_SIZE];
+        for (int i = 0; i < NUM_QUADS; i++) {
+            for (int j = 0; j < QUAD_SIZE; j++) {
+                System.arraycopy(pbs.quadrants[i][j], 0, this.quadrants[i][j], 0, QUAD_SIZE);
+            }
+        }
+
+        rand = new Random(2019);
+        this.winner = pbs.winner;
+        this.turnPlayer = pbs.turnPlayer;
+        this.turnNumber = pbs.turnNumber;
+    }
+
+    public Piece[][] getBoard() { return this.board; }
+
+    @Override
+    public Object clone() {
+        return new Custom_Board_State(this);
+    }
+
+    @Override
+    public int getWinner() { return winner; }
+
+    @Override
+    public void setWinner(int win) { winner = win; }
+
+    @Override
+    public int getTurnPlayer() { return turnPlayer; }
+
+    @Override
+    public int getTurnNumber() { return turnNumber; }
+
+    @Override
+    public boolean isInitialized() { return board != null; }
+
+    @Override
+    public int firstPlayer() { return FIRST_PLAYER; }
+
+    @Override
+    public Move getRandomMove() {
+        ArrayList<PentagoMove> moves = getAllLegalMoves();
+        return moves.get(rand.nextInt(moves.size()));
+    }
+
+    public Piece getPieceAt(int xPos, int yPos) {
+        if (xPos < 0 || xPos >= BOARD_SIZE || yPos < 0 || yPos >= BOARD_SIZE) {
+            throw new IllegalArgumentException("Out of range");
+        }
+        return board[xPos][yPos];
+    }
+
+    public Piece getPieceAt(PentagoCoord coord) {
+        return getPieceAt(coord.getX(), coord.getY());
+    }
+
+    public ArrayList<PentagoMove> getAllLegalMoves() {
+        ArrayList<PentagoMove> legalMoves = new ArrayList<>();
+        for (int i = 0; i < BOARD_SIZE; i++) { //Iterate through positions on board
+            for (int j = 0; j < BOARD_SIZE; j++) {
+                if (board[i][j] == Piece.EMPTY) {
+//                    for (int k = 0; k < NUM_QUADS - 1; k++) { // Iterate through valid swaps
+//                        for (int l = k+1; l < NUM_QUADS; l++) {
+//                            legalMoves.add(new PentagoMove(i, j, k, l, turnPlayer));
+//                        }
+//                    }
+                    for (int k = 0; k < NUM_QUADS; k++) { // Iterate through valid moves for rotate/flip
+                        for (int l = 0; l < 2; l++) {
+                            legalMoves.add(new PentagoMove(i, j, k, l, turnPlayer));
+                        }
+                    }
+                }
+            }
+        }
+        return legalMoves;
+    }
+
+    public boolean isLegal(PentagoMove m) {
+        // for swap
+        //if (m.getASwap() < 0 || m.getASwap() >= NUM_QUADS || m.getBSwap() < 0 || m.getBSwap() >= NUM_QUADS) { return false; }
+        //if (m.getASwap() == m.getBSwap()) { return false; } // Cannot swap same tile
+
+        // update for rotate90 and flip
+        if (m.getASwap() < 0 || m.getASwap() >= NUM_QUADS || m.getBSwap() < 0 || m.getBSwap() >= 2) { return false; }
+
+        PentagoCoord c = m.getMoveCoord();
+        if (c.getX() >= BOARD_SIZE || c.getX() < 0 || c.getY() < 0 || c.getY() >= BOARD_SIZE) { return false; }
+        if (turnPlayer != m.getPlayerID() || m.getPlayerID() == ILLEGAL) { return false; } //Check right player
+        return board[c.getX()][c.getY()] == Piece.EMPTY;
     }
 
     /**
-     * Using Zobrist hashing in combination with the following link to encode a
-     * quadrant state in a rotationaly invariant way.
-     * https://computer-go.computer-go.narkive.com/RRLdmjMH/rotate-board
+     * Check if placing a piece here is legal, without regards to the swap or player ID
+     * @param c
+     * @return
      */
-    public static long quadrant_hash(Piece[][] q, int player) {
-        long hash = 0;
-        for (int i = 0; i < q.length * q.length; i++) {
-            if (q[(int) (i / q.length)][i % q.length] == Piece.WHITE) {
-                hash ^= zobrist_kernel[0][i];
-            } else if (q[(int) (i / q.length)][i % q.length] == Piece.BLACK) {
-                hash ^= zobrist_kernel[1][i];
+    public boolean isPlaceLegal(PentagoCoord c) {
+        if (c.getX() >= BOARD_SIZE || c.getX() < 0 || c.getY() < 0 || c.getY() >= BOARD_SIZE) { return false; }
+        return board[c.getX()][c.getY()] == Piece.EMPTY;
+    }
+
+    public void processMove(PentagoMove m) throws IllegalArgumentException {
+        if (!isLegal(m)) { throw new IllegalArgumentException("Invalid move. Move: " + m.toPrettyString()); }
+        updateQuadrants(m);
+        updateWinner();
+        if (turnPlayer != FIRST_PLAYER) { turnNumber += 1; } // Update the turn number if needed
+        turnPlayer = 1 - turnPlayer; // Swap player
+    }
+
+    /**
+     * Updates the appropriate quandrant based on the location of the move m
+     * @param m: Pentago move
+     */
+    public void updateQuadrants(PentagoMove m) {
+        Piece turnPiece = turnPlayer == WHITE ? Piece.WHITE : Piece.BLACK;
+        int x = m.getMoveCoord().getX();
+        int y = m.getMoveCoord().getY();
+        boolean isLeftQuadMove = y / 3 == 0;
+        boolean isTopQuadMove = x / 3 == 0;
+        if (isLeftQuadMove && isTopQuadMove) { //Top left quadrant
+            quadrants[0][x][y] = turnPiece;
+        } else if (!isLeftQuadMove && isTopQuadMove) { //Top right quadrant
+            quadrants[1][x][y % QUAD_SIZE] = turnPiece;
+        } else if (isLeftQuadMove) { //Bottom left quadrant
+            quadrants[2][x % QUAD_SIZE][y] = turnPiece;
+        } else { //Bottom right quadrant
+            quadrants[3][x % QUAD_SIZE][y % QUAD_SIZE] = turnPiece;
+        }
+
+        //Swapping mechanism
+        int a = m.getASwap();
+        int b = m.getBSwap();
+        Piece[][] tmp = quadrants[a];
+        //quadrants[a] = quadrants[b];
+        //quadrants[b] = tmp;
+        Piece[][] tmp2 = new Piece [quadrants[a].length][quadrants[a].length];
+
+
+        int N = tmp.length;
+        // check
+//        for (int j = 0; j < N; j++)
+//        {
+//            for (int i = 0; i <N; i++){
+//                System.out.print(tmp[j][i]);
+//            }
+//        }
+        switch (b){
+            case 0:
+                // rotate 90 right
+                //System.out.println("Rotate");
+                for (int j = 0; j < N; j++)
+                {
+                    for (int i = N - 1; i >= 0; i--) {
+                        //System.arraycopy(quadrants[a][j],  N - 1 - i, tmp[i], j, 1);
+                        System.arraycopy(tmp[i], j, tmp2[j],  N - 1 - i, 1);
+                    }
+                }
+                break;
+            case 1:
+               // flip a quadrant
+                //System.out.println("Flip");
+                for (int j = 0; j < N; j++)
+                {
+                    for (int i = N - 1; i >= 0; i--) {
+                        //System.arraycopy(quadrants[a][j],  N - 1 - i, tmp[i], j, 1);
+                        System.arraycopy(tmp[j], i, tmp2[j],  N - 1 - i, 1);
+                    }
+                }
+                break;
+
+        }
+
+
+        quadrants[a] = tmp2;
+        buildBoardFromQuadrants();
+    }
+
+
+
+    public void buildBoardFromQuadrants() {
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            int quadrantRow = i < 3 ? i : i - 3;
+            int leftQuad = i < 3 ? 0 : 2;
+            int rightQuad = i < 3 ? 1 : 3;
+            System.arraycopy(quadrants[leftQuad][quadrantRow], 0, board[i], 0, 3);
+            System.arraycopy(quadrants[rightQuad][quadrantRow], 0, board[i], 3, 3);
+        }
+    }
+
+    public void updateWinner() {
+        boolean playerWin = checkVerticalWin(turnPlayer) || checkHorizontalWin(turnPlayer) || checkDiagRightWin(turnPlayer) || checkDiagLeftWin(turnPlayer);
+        int otherPlayer = 1 - turnPlayer;
+        boolean otherWin = checkVerticalWin(otherPlayer) || checkHorizontalWin(otherPlayer) || checkDiagRightWin(otherPlayer) || checkDiagLeftWin(otherPlayer);
+        if (playerWin) { // Current player has won
+            winner = otherWin ? Board.DRAW : turnPlayer;
+        } else if (otherWin) { // Player's move caused the opponent to win
+            winner = otherPlayer;
+        } else if (gameOver()) {
+            winner = Board.DRAW;
+        }
+    }
+
+    @Override
+    public boolean gameOver() {
+        return ((turnNumber >= MAX_TURNS - 1) && turnPlayer == BLACK) || winner != Board.NOBODY;
+    }
+
+    public boolean checkVerticalWin(int player) {
+        return checkWinRange(player, 0, 2, 0, BOARD_SIZE, getNextVertical);
+    }
+
+    public boolean checkHorizontalWin(int player) {
+        return checkWinRange(player, 0, BOARD_SIZE, 0, 2, getNextHorizontal);
+    }
+
+    public boolean checkDiagRightWin(int player) {
+        return checkWinRange(player, 0, 2, 0, 2, getNextDiagRight);
+    }
+
+    public boolean checkDiagLeftWin(int player) {
+        return checkWinRange(player, 0 ,2, BOARD_SIZE - 2, BOARD_SIZE, getNextDiagLeft);
+    }
+
+    public boolean checkWinRange(int player, int xStart, int xEnd, int yStart, int yEnd, UnaryOperator<PentagoCoord> direction) {
+        boolean win = false;
+        for (int i = xStart; i < xEnd; i++) {
+            for (int j = yStart; j < yEnd; j++) {
+                win |= checkWin(player, new PentagoCoord(i, j), direction);
+                if (win) { return true; }
             }
         }
-        return hash;
+        return false;
+    }
+
+    public boolean checkWin(int player, PentagoCoord start, UnaryOperator<PentagoCoord> direction) {
+        int winCounter = 0;
+        Piece currColour = player == 0 ? Piece.WHITE : Piece.BLACK;
+        PentagoCoord current = start;
+        while(true) {
+            try {
+                if (currColour == this.board[current.getX()][current.getY()]) {
+                    winCounter++;
+                    current = direction.apply(current);
+                } else {
+                    break;
+                }
+            } catch (IllegalArgumentException e) { //We have run off the board
+                break;
+            }
+        }
+        return winCounter >= 5;
     }
 }
