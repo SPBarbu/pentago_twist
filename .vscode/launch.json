@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "Launch MyTools",
+            "request": "launch",
+            "mainClass": "student_player.MyTools",
+            "projectName": "pentago_twist"
+        },
+        {
+            "type": "java",
             "name": "Launch Student Player Client",
             "request": "launch",
             "mainClass": "boardgame.Client",
@@ -13,10 +20,24 @@
         },
         {
             "type": "java",
+            "name": "Launch AlphaBeta Player Client",
+            "request": "launch",
+            "mainClass": "boardgame.Client",
+            "args": "alpha_beta.AlphaBetaPlayer"
+        },
+        {
+            "type": "java",
             "name": "Launch Random Player Client",
             "request": "launch",
             "mainClass": "boardgame.Client",
             "args": "pentago_twist.RandomPentagoPlayer"
+        },
+        {
+            "type": "java",
+            "name": "Launch Server for Debug",
+            "request": "launch",
+            "mainClass": "boardgame.Server",
+            "args": "-t 90000000 -ft 90000000"
         }
     ]
 }

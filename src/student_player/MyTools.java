@@ -14,11 +14,11 @@ public class MyTools {
 
     public static void init(PentagoBoardState boardState) {
         if (playing_board == null) {
-            playing_board = new Custom_Board_State();
+            playing_board = new Custom_Board_State(boardState);
         }
     }
 
-    public static void test(PentagoBoardState a){
+    public static void test(PentagoBoardState a) {
         Custom_Board_State b = new Custom_Board_State(a);
     }
 
@@ -45,6 +45,9 @@ class Custom_Board_State extends BoardState {
 
     public Piece[][] board;
     public Piece[][][] quadrants;
+    public Piece[][][] last_quadrants;
+    public String[] quadrants_rotation_history;
+    public int myPlayer;
     public int turnPlayer;
     public int turnNumber;
     public int winner;
@@ -114,6 +117,27 @@ class Custom_Board_State extends BoardState {
         this.winner = cbs.getWinner();
         this.turnPlayer = cbs.getTurnPlayer();
         this.turnNumber = cbs.getTurnNumber();
+        this.myPlayer = this.turnPlayer % 2;
+    }
+
+    public int get_number_pieces_board() {
+        return this.turnNumber + 1;
+    }
+
+    public int get_number_pieces_quadrant(Piece[][] q) {
+        int n = 0;
+        for (int i = 0; i < QUAD_SIZE; i++) {
+            for (int j = 0; j < QUAD_SIZE; j++) {
+                if (q[i][j] != Piece.EMPTY) {
+                    n += 1;
+                }
+            }
+        }
+        return n;
+    }
+
+    public int get_number_pieces_quadrant(int q) {
+        return get_number_pieces_quadrant(quadrants[q]);
     }
 
     public Piece[][] getBoard() {
