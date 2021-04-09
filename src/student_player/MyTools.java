@@ -18,17 +18,39 @@ public class MyTools {
         return n;
     }
 
+    public static void main(String[] args) {
+        Piece[][] a = process_move_quadrant(new Piece[][] { { Piece.WHITE, Piece.EMPTY, Piece.EMPTY },
+                { Piece.EMPTY, Piece.EMPTY, Piece.EMPTY }, { Piece.EMPTY, Piece.EMPTY, Piece.EMPTY } }, "12",
+                Piece.BLACK);
+        ArrayList<String> c = get_legal_moves_quadrant(a);
+        int b = 0;
+    }
+
+    public static ArrayList<String> get_legal_moves_quadrant(Piece[][] quad) {
+        ArrayList<String> moves = new ArrayList<String>();
+        for (int i = 0; i < QUAD_SIZE; i++) {
+            for (int j = 0; j < QUAD_SIZE; j++) {
+                if (quad[i][j] == Piece.EMPTY) {
+                    moves.add(i + "" + j);
+                }
+            }
+        }
+        return moves;
+    }
+
     public static Piece[][] process_move_quadrant(Piece[][] q, String m, Piece player) {
         Piece[][] p = new Piece[QUAD_SIZE][QUAD_SIZE];
-        if (q[m.charAt(0)][m.charAt(1)] != Piece.EMPTY) {
+        if (q[Integer.parseInt(m.charAt(0) + "")][Integer.parseInt(m.charAt(1) + "")] != Piece.EMPTY) {
             return null;
         }
-        for (int i = 0; i < QUAD_SIZE; i++) {
+        for (
+
+                int i = 0; i < QUAD_SIZE; i++) {
             for (int j = 0; j < QUAD_SIZE; j++) {
                 p[i][j] = q[i][j];
             }
         }
-        p[m.charAt(0)][m.charAt(1)] = player;
+        p[Integer.parseInt(m.charAt(0) + "")][Integer.parseInt(m.charAt(1) + "")] = player;
         return p;
     }
 
