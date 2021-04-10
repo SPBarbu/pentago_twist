@@ -6,25 +6,18 @@ import pentago_twist.PentagoBoardState.Piece;
 public class MyTools {
     private static final int QUAD_SIZE = 3;
 
-    public static int get_number_pieces(Piece[][] q) {
-        int n = 0;
-        for (int i = 0; i < QUAD_SIZE; i++) {
-            for (int j = 0; j < QUAD_SIZE; j++) {
-                if (q[i][j] != Piece.EMPTY) {
-                    n += 1;
-                }
-            }
-        }
-        return n;
-    }
-
     public static void main(String[] args) {
         Piece[][] a = process_move_quadrant(new Piece[][] { { Piece.WHITE, Piece.EMPTY, Piece.EMPTY },
                 { Piece.EMPTY, Piece.EMPTY, Piece.EMPTY }, { Piece.EMPTY, Piece.EMPTY, Piece.EMPTY } }, "12",
                 Piece.BLACK);
         ArrayList<String> c = get_legal_moves_quadrant(a);
+        ArrayList<Piece[][]> d = new ArrayList<Piece[][]>();
+        for (int i = 0; i < c.size(); i++) {
+            d.add(process_move_quadrant(a, c.get(i), Piece.WHITE));
+        }
         int b = 0;
     }
+    
 
     public static ArrayList<String> get_legal_moves_quadrant(Piece[][] quad) {
         ArrayList<String> moves = new ArrayList<String>();
@@ -40,17 +33,15 @@ public class MyTools {
 
     public static Piece[][] process_move_quadrant(Piece[][] q, String m, Piece player) {
         Piece[][] p = new Piece[QUAD_SIZE][QUAD_SIZE];
-        if (q[Integer.parseInt(m.charAt(0) + "")][Integer.parseInt(m.charAt(1) + "")] != Piece.EMPTY) {
+        if (q[m.charAt(0) - '0'][m.charAt(1) - '0'] != Piece.EMPTY) {
             return null;
         }
-        for (
-
-                int i = 0; i < QUAD_SIZE; i++) {
+        for (int i = 0; i < QUAD_SIZE; i++) {
             for (int j = 0; j < QUAD_SIZE; j++) {
                 p[i][j] = q[i][j];
             }
         }
-        p[Integer.parseInt(m.charAt(0) + "")][Integer.parseInt(m.charAt(1) + "")] = player;
+        p[m.charAt(0) - '0'][m.charAt(1) - '0'] = player;
         return p;
     }
 
@@ -110,7 +101,7 @@ public class MyTools {
 
     }
 
-    private static int get_longest_line(Piece[] line, Piece player) {
+    public static int get_longest_line(Piece[] line, Piece player) {
         if (line.length == 3) {
             if (line[0] == player && line[1] == player && line[2] == player) {
                 return 3;
@@ -131,5 +122,17 @@ public class MyTools {
             }
         }
         return 0;
+    }
+
+    public static int get_number_pieces(Piece[][] q) {
+        int n = 0;
+        for (int i = 0; i < QUAD_SIZE; i++) {
+            for (int j = 0; j < QUAD_SIZE; j++) {
+                if (q[i][j] != Piece.EMPTY) {
+                    n += 1;
+                }
+            }
+        }
+        return n;
     }
 }
