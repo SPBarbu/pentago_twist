@@ -29,7 +29,7 @@ public class StudentPlayer extends PentagoPlayer {
         // update opponent's move
         MyTools.board_state_opp_move = (PentagoBoardState) boardState.clone();
 
-        Piece my_piece = Piece.BLACK;
+        Piece my_piece = boardState.getTurnPlayer() == 0 ? Piece.WHITE : Piece.BLACK;
         int quad_updated = MyTools.get_quadrant_updated();
         int q_strat = MyTools.quad_strat[quad_updated];
         String b_m = "";
@@ -39,14 +39,14 @@ public class StudentPlayer extends PentagoPlayer {
 
         if (q_strat == 0) {
             if (!play_q_isfull) {
-                b_m = MyTools.get_best_move(play_q, quad_updated, 1, my_piece);
+                b_m = MyTools.get_best_move(play_q, quad_updated, MyTools.get_turn_number_on_quad(play_q), my_piece);
                 myMove = MyTools.string_to_move(b_m, quad_updated, this.player_id);
             } else {// play on new board when quad is full
                 quad_updated = (quad_updated + 1) % 4;
                 play_q = MyTools.get_quadrant_from_board(MyTools.board_state_opp_move.getBoard(), quad_updated);
                 b_m = MyTools.get_best_move(
                         MyTools.get_quadrant_from_board(MyTools.board_state_opp_move.getBoard(), quad_updated),
-                        quad_updated, 0, my_piece);
+                        quad_updated, MyTools.get_turn_number_on_quad(play_q), my_piece);
                 myMove = MyTools.string_to_move(b_m, quad_updated, this.player_id);
             }
         } else if (q_strat == 1) {
@@ -59,7 +59,7 @@ public class StudentPlayer extends PentagoPlayer {
                 play_q = MyTools.get_quadrant_from_board(MyTools.board_state_opp_move.getBoard(), quad_updated);
                 b_m = MyTools.get_best_move(
                         MyTools.get_quadrant_from_board(MyTools.board_state_opp_move.getBoard(), quad_updated),
-                        quad_updated, 0, my_piece);
+                        quad_updated, MyTools.get_turn_number_on_quad(play_q), my_piece);
                 myMove = MyTools.string_to_move(b_m, quad_updated, this.player_id);
             } else {
                 b_m = MyTools.continue_for_draw(play_q, quad_updated, my_piece);

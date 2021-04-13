@@ -18,8 +18,11 @@ public class MyTools {
             Arrays.asList("00", "01", "02", "10", "11", "12", "20", "21", "22"));
     public static PentagoBoardState board_state_after_my_last_move;
     public static PentagoBoardState board_state_opp_move;
+    public static int[] quad_win_type = new int[] { 0, 0, 0, 0 };
+    // 1:diagonal
+    // 2:straight edge
+    // 3:straight middle
     public static int[] quad_strat = new int[] { 0, 0, 0, 0 };
-    public static int[] quad_turns = new int[] { 0, 0, 0, 0 };
     // 0:continue best
     // 1:continue for win
     // 2:continue for draw
@@ -29,7 +32,7 @@ public class MyTools {
     public static int get_quadrant_updated() {
         if (board_state_opp_move.getTurnNumber() == 0) {
             if (board_state_opp_move.getTurnPlayer() == 0) {
-                return -1;
+                return 0;
             } else {
                 for (int i = 0; i < NUM_QUADS; i++) {
                     if (get_number_pieces(get_quadrant_from_board(board_state_opp_move.getBoard(), i)) == 1) {
@@ -62,7 +65,7 @@ public class MyTools {
             return board_state_opp_move.getRandomMove();
         }
         Move m = new PentagoMove((int) (Math.floor(quad_numb / 2) * 3) + (move.charAt(0) - '0'),
-                (quad_numb % 2) * 3 + (move.charAt(1) - '0'), 0, 0, playerId);
+                (quad_numb % 2) * 3 + (move.charAt(1) - '0'), 3, 0, playerId);
         return m;
     }
 
@@ -141,6 +144,7 @@ public class MyTools {
                         if (q[0][1] == en_piece) {// touch left
                             if (q[1][0] == Piece.EMPTY) {
                                 quad_strat[q_number] = 3;
+                                quad_win_type[q_number] = 2;
                                 return "10";
                             } else {
                                 quad_strat[q_number] = 1;
@@ -149,6 +153,7 @@ public class MyTools {
                         } else if (q[1][0] == en_piece) {// touch right
                             if (q[0][1] == Piece.EMPTY) {
                                 quad_strat[q_number] = 3;
+                                quad_win_type[q_number] = 2;
                                 return "01";
                             } else {
                                 quad_strat[q_number] = 1;
@@ -158,6 +163,7 @@ public class MyTools {
                             if (q[2][0] == my_piece) {
                                 if (q[1][0] == Piece.EMPTY) {
                                     quad_strat[q_number] = 3;
+                                    quad_win_type[q_number] = 2;
                                     return "10";
                                 } else {
                                     quad_strat[q_number] = 1;
@@ -170,6 +176,7 @@ public class MyTools {
                             } else {
                                 if (q[0][1] == Piece.EMPTY) {
                                     quad_strat[q_number] = 3;
+                                    quad_win_type[q_number] = 2;
                                     return "01";
                                 } else {
                                     quad_strat[q_number] = 1;
@@ -185,6 +192,7 @@ public class MyTools {
                         if (q[1][2] == en_piece) {// touch left
                             if (q[0][1] == Piece.EMPTY) {
                                 quad_strat[q_number] = 3;
+                                quad_win_type[q_number] = 2;
                                 return "01";
                             } else {
                                 quad_strat[q_number] = 1;
@@ -193,6 +201,7 @@ public class MyTools {
                         } else if (q[1][0] == en_piece) {// touch right
                             if (q[1][2] == Piece.EMPTY) {
                                 quad_strat[q_number] = 3;
+                                quad_win_type[q_number] = 2;
                                 return "12";
                             } else {
                                 quad_strat[q_number] = 1;
@@ -202,6 +211,7 @@ public class MyTools {
                             if (q[0][0] == my_piece) {
                                 if (q[0][1] == Piece.EMPTY) {
                                     quad_strat[q_number] = 3;
+                                    quad_win_type[q_number] = 2;
                                     return "01";
                                 } else {
                                     quad_strat[q_number] = 1;
@@ -214,6 +224,7 @@ public class MyTools {
                             } else {
                                 if (q[1][2] == Piece.EMPTY) {
                                     quad_strat[q_number] = 3;
+                                    quad_win_type[q_number] = 2;
                                     return "12";
                                 } else {
                                     quad_strat[q_number] = 1;
@@ -229,6 +240,7 @@ public class MyTools {
                         if (q[2][1] == en_piece) {// touch left
                             if (q[1][2] == Piece.EMPTY) {
                                 quad_strat[q_number] = 3;
+                                quad_win_type[q_number] = 2;
                                 return "12";
                             } else {
                                 quad_strat[q_number] = 1;
@@ -237,6 +249,7 @@ public class MyTools {
                         } else if (q[1][0] == en_piece) {// touch right
                             if (q[2][1] == Piece.EMPTY) {
                                 quad_strat[q_number] = 3;
+                                quad_win_type[q_number] = 2;
                                 return "21";
                             } else {
                                 quad_strat[q_number] = 1;
@@ -246,6 +259,7 @@ public class MyTools {
                             if (q[2][0] == my_piece) {
                                 if (q[2][1] == Piece.EMPTY) {
                                     quad_strat[q_number] = 3;
+                                    quad_win_type[q_number] = 2;
                                     return "21";
                                 } else {
                                     quad_strat[q_number] = 1;
@@ -258,6 +272,7 @@ public class MyTools {
                             } else {
                                 if (q[1][2] == Piece.EMPTY) {
                                     quad_strat[q_number] = 3;
+                                    quad_win_type[q_number] = 2;
                                     return "12";
                                 } else {
                                     quad_strat[q_number] = 1;
@@ -273,6 +288,7 @@ public class MyTools {
                         if (q[1][0] == en_piece) {// touch left
                             if (q[2][1] == Piece.EMPTY) {
                                 quad_strat[q_number] = 3;
+                                quad_win_type[q_number] = 2;
                                 return "21";
                             } else {
                                 quad_strat[q_number] = 1;
@@ -281,6 +297,7 @@ public class MyTools {
                         } else if (q[2][1] == en_piece) {// touch right
                             if (q[1][0] == Piece.EMPTY) {
                                 quad_strat[q_number] = 3;
+                                quad_win_type[q_number] = 2;
                                 return "10";
                             } else {
                                 quad_strat[q_number] = 1;
@@ -290,6 +307,7 @@ public class MyTools {
                             if (q[0][0] == my_piece) {
                                 if (q[1][0] == Piece.EMPTY) {
                                     quad_strat[q_number] = 3;
+                                    quad_win_type[q_number] = 2;
                                     return "10";
                                 } else {
                                     quad_strat[q_number] = 1;
@@ -302,6 +320,7 @@ public class MyTools {
                             } else {
                                 if (q[2][1] == Piece.EMPTY) {
                                     quad_strat[q_number] = 3;
+                                    quad_win_type[q_number] = 2;
                                     return "21";
                                 } else {
                                     quad_strat[q_number] = 1;
@@ -448,6 +467,7 @@ public class MyTools {
                     if (q[1][0] == my_piece) {
                         if (q[1][2] == Piece.EMPTY) {
                             quad_strat[q_number] = 3;
+                            quad_win_type[q_number] = 3;
                             return "12";
                         } else {
                             quad_strat[q_number] = 1;
@@ -456,6 +476,7 @@ public class MyTools {
                     } else {
                         if (q[1][0] == Piece.EMPTY) {
                             quad_strat[q_number] = 3;
+                            quad_win_type[q_number] = 3;
                             return "10";
                         } else {
                             quad_strat[q_number] = 1;
@@ -466,6 +487,7 @@ public class MyTools {
                     if (q[1][1] == my_piece) {
                         if (q[2][1] == Piece.EMPTY) {
                             quad_strat[q_number] = 3;
+                            quad_win_type[q_number] = 3;
                             return "21";
                         } else {
                             quad_strat[q_number] = 1;
@@ -474,6 +496,7 @@ public class MyTools {
                     } else {
                         if (q[1][1] == Piece.EMPTY) {
                             quad_strat[q_number] = 3;
+                            quad_win_type[q_number] = 3;
                             return "11";
                         } else {
                             quad_strat[q_number] = 1;
@@ -485,6 +508,10 @@ public class MyTools {
         }
 
         return "";
+    }
+
+    public static int get_turn_number_on_quad(Piece[][] q) {
+        return get_number_pieces(q) % 2;
     }
 
     public static void main(String[] args) {
@@ -501,6 +528,7 @@ public class MyTools {
         for (String move : get_legal_moves_quadrant(q)) {
             if (get_longest(process_move_quadrant(q, move, my_piece), my_piece) == 3) {
                 quad_strat[q_number] = 3;
+                quad_win_type[q_number] = get_win_type(q, my_piece);
                 return move;
             }
         }
@@ -614,6 +642,22 @@ public class MyTools {
         return p;
     }
 
+    public static int get_win_type(Piece[][] q, Piece player) {
+        if ((q[0][0] == player && q[1][0] == player && q[2][0] == player)
+                || (q[0][2] == player && q[1][2] == player && q[2][2] == player)
+                || (q[0][0] == player && q[0][1] == player && q[0][2] == player)
+                || (q[2][0] == player && q[2][1] == player && q[2][2] == player)) {
+            return 2;
+        } else if ((q[1][0] == player && q[1][1] == player && q[1][2] == player)
+                || (q[0][1] == player && q[1][1] == player && q[2][1] == player)) {
+            return 3;
+        } else if ((q[0][0] == player && q[1][1] == player && q[2][2] == player)
+                || (q[2][0] == player && q[1][1] == player && q[0][0] == player)) {
+            return 1;
+        }
+        return 0;
+    }
+
     public static int get_longest(Piece[][] quadrant, Piece player) {
         int l = 0;
         int t = 0;
@@ -705,4 +749,5 @@ public class MyTools {
         }
         return "";
     }
+
 }
